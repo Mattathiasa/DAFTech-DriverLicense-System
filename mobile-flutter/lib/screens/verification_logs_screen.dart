@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../models/verification_log.dart';
 import '../services/verification_api_service.dart';
 
@@ -67,32 +66,54 @@ class _VerificationLogsScreenState extends State<VerificationLogsScreen> {
 
   Future<void> _exportData() async {
     setState(() => _isLoading = true);
-    final csvData = await _verificationApiService.exportLogs();
-    setState(() => _isLoading = false);
 
-    if (csvData == null) {
+    try {
+      final csvData = await _verificationApiService.exportLogs();
+      setState(() => _isLoading = false);
+
+      if (csvData == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to export data'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Save to app documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final file = File('${directory.path}/VerificationLogs_$timestamp.csv');
+      await file.writeAsString(csvData);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to export data'),
+          SnackBar(
+            content: Text('Exported to: ${file.path}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
       }
-      return;
     }
-
-    final directory = await getTemporaryDirectory();
-    final file = File(
-      '${directory.path}/VerificationLogs_${DateTime.now().millisecondsSinceEpoch}.csv',
-    );
-    await file.writeAsString(csvData);
-
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: 'Verification Logs Export',
-      subject: 'Driver License Verification Audit Log',
-    );
   }
 
   @override
@@ -195,7 +216,7 @@ class _VerificationLogsScreenState extends State<VerificationLogsScreen> {
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                             ),
                           ],
@@ -229,7 +250,7 @@ class _VerificationLogsScreenState extends State<VerificationLogsScreen> {
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                           ),
                         ],
