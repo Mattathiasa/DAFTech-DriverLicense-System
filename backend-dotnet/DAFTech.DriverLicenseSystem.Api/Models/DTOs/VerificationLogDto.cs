@@ -1,0 +1,10 @@
+namespace DAFTech.DriverLicenseSystem.Api.Models.DTOs;
+
+public class VerificationLogDto
+{
+    public int LogId { get; set; }
+    public string LicenseId { get; set; } = string.Empty;
+    public string VerificationStatus { get; set; } = string.Empty;
+    public int CheckedBy { get; set; }
+    public DateTime CheckedDate { get; set; }
+}
