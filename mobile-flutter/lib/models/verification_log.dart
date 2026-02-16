@@ -4,22 +4,18 @@ class VerificationLog {
   final String
   result; // 'real', 'fake', 'expired' (mapped from verificationStatus)
   final DateTime timestamp;
-  final String? driverName;
   final bool isReal;
   final bool? isActive;
   final int? checkedBy;
-  final String? notes;
 
   VerificationLog({
     required this.id,
     required this.licenseId,
     required this.result,
     required this.timestamp,
-    this.driverName,
     required this.isReal,
     this.isActive,
     this.checkedBy,
-    this.notes,
   });
 
   Map<String, dynamic> toJson() {
@@ -28,11 +24,9 @@ class VerificationLog {
       'licenseId': licenseId,
       'result': result,
       'timestamp': timestamp.toIso8601String(),
-      'driverName': driverName,
       'isReal': isReal,
       'isActive': isActive,
       'checkedBy': checkedBy,
-      'notes': notes,
     };
   }
 
@@ -42,11 +36,9 @@ class VerificationLog {
       licenseId: json['licenseId'],
       result: json['verificationStatus'] ?? json['result'] ?? '',
       timestamp: DateTime.parse(json['checkedDate'] ?? json['timestamp']),
-      driverName: json['driverName'],
       isReal: json['isReal'] ?? (json['result'] == 'real'),
       isActive: json['isActive'],
       checkedBy: json['checkedBy'],
-      notes: json['notes'],
     );
   }
 }

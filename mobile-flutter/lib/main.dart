@@ -27,7 +27,7 @@ class DriverLicenseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Driver License System',
+      title: 'DAFTech-DriverLicense-System',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(

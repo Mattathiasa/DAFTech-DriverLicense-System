@@ -4916,11 +4916,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\matta\\Desktop\\DAFTech\\driver_license_registration_and_verification_system\\backend\\DAFTech.DriverLicenseSystem.Api\\DAFTech.DriverLicenseSystem.Api.csproj",
+      "projectUniqueName": "C:\\Users\\matta\\Desktop\\DAFTech\\backend-dotnet\\DAFTech.DriverLicenseSystem.Api\\DAFTech.DriverLicenseSystem.Api.csproj",
       "projectName": "DAFTech.DriverLicenseSystem.Api",
-      "projectPath": "C:\\Users\\matta\\Desktop\\DAFTech\\driver_license_registration_and_verification_system\\backend\\DAFTech.DriverLicenseSystem.Api\\DAFTech.DriverLicenseSystem.Api.csproj",
+      "projectPath": "C:\\Users\\matta\\Desktop\\DAFTech\\backend-dotnet\\DAFTech.DriverLicenseSystem.Api\\DAFTech.DriverLicenseSystem.Api.csproj",
       "packagesPath": "C:\\Users\\matta\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\matta\\Desktop\\DAFTech\\driver_license_registration_and_verification_system\\backend\\DAFTech.DriverLicenseSystem.Api\\obj\\",
+      "outputPath": "C:\\Users\\matta\\Desktop\\DAFTech\\backend-dotnet\\DAFTech.DriverLicenseSystem.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -21,10 +21,13 @@ public class VerificationService
 
     public async Task<VerificationResponseDto> VerifyLicense(string licenseId, string qrRawData, int checkedByUserId)
     {
+        Console.WriteLine($"[DEBUG] VerifyLicense called with licenseId: '{licenseId}', qrRawData length: {qrRawData?.Length ?? 0}");
+        
         var driver = await _driverRepository.GetByLicenseId(licenseId);
 
         if (driver == null)
         {
+            Console.WriteLine($"[DEBUG] Driver NOT FOUND in database for licenseId: '{licenseId}'");
             await LogVerification(licenseId, "fake", checkedByUserId);
             
             return new VerificationResponseDto
@@ -37,10 +40,13 @@ public class VerificationService
             };
         }
 
+        Console.WriteLine($"[DEBUG] Driver FOUND: {driver.FullName}, Expiry: {driver.ExpiryDate}, Stored QR length: {driver.QRRawData?.Length ?? 0}");
+
         // Compare QR data
         if (!string.IsNullOrEmpty(qrRawData) && !string.IsNullOrEmpty(driver.QRRawData) && 
             !CompareQRData(qrRawData, driver.QRRawData))
         {
+            Console.WriteLine($"[DEBUG] QR Data MISMATCH - Scanned: '{qrRawData}', Stored: '{driver.QRRawData}'");
             await LogVerification(licenseId, "fake", checkedByUserId);
             
             return new VerificationResponseDto
@@ -56,6 +62,8 @@ public class VerificationService
         // Check expiry status
         bool isExpired = driver.ExpiryDate < DateTime.UtcNow.Date;
         string status = isExpired ? "expired" : "real";
+
+        Console.WriteLine($"[DEBUG] Verification result: {status}, IsExpired: {isExpired}, ExpiryDate: {driver.ExpiryDate}, Today: {DateTime.UtcNow.Date}");
 
         await LogVerification(licenseId, status, checkedByUserId);
 

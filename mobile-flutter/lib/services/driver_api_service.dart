@@ -13,7 +13,6 @@ class DriverApiService {
     required String expiryDate,
     required String qrRawData,
     required String ocrRawText,
-    String? region,
   }) async {
     try {
       final response = await _apiService.post('/Driver/register', {
@@ -24,7 +23,6 @@ class DriverApiService {
         'expiryDate': expiryDate,
         'qrRawData': qrRawData,
         'ocrRawText': ocrRawText,
-        'region': region,
       });
 
       if (response['success'] == true && response['data'] != null) {
@@ -43,20 +41,7 @@ class DriverApiService {
       final response = await _apiService.get('/Driver/$licenseId');
 
       if (response['success'] == true && response['data'] != null) {
-        final data = response['data'];
-        return Driver(
-          id: data['driverId'].toString(),
-          licenseId: data['licenseId'],
-          fullName: data['fullName'],
-          dateOfBirth: data['dateOfBirth'],
-          address: '', // Not in API response
-          licenseType: data['licenseType'],
-          issueDate: '', // Not in API response
-          expiryDate: data['expiryDate'],
-          qrData: data['qrRawData'],
-          status: data['status'].toLowerCase(),
-          registeredAt: DateTime.parse(data['createdDate']),
-        );
+        return Driver.fromJson(response['data']);
       } else {
         return null;
       }
@@ -68,31 +53,26 @@ class DriverApiService {
   // Get all drivers
   Future<List<Driver>> getAllDrivers() async {
     try {
+      print('DEBUG: Calling /Driver endpoint...');
       final response = await _apiService.get('/Driver');
+
+      print('DEBUG: Response success: ${response['success']}');
+      print('DEBUG: Response data type: ${response['data']?.runtimeType}');
 
       if (response['success'] == true && response['data'] != null) {
         final List<dynamic> data = response['data'];
-        return data
-            .map(
-              (item) => Driver(
-                id: item['driverId'].toString(),
-                licenseId: item['licenseId'],
-                fullName: item['fullName'],
-                dateOfBirth: item['dateOfBirth'],
-                address: '',
-                licenseType: item['licenseType'],
-                issueDate: '',
-                expiryDate: item['expiryDate'],
-                qrData: item['qrRawData'],
-                status: item['status'].toLowerCase(),
-                registeredAt: DateTime.parse(item['createdDate']),
-              ),
-            )
-            .toList();
+        print('DEBUG: Number of drivers in response: ${data.length}');
+
+        final drivers = data.map((item) => Driver.fromJson(item)).toList();
+
+        print('DEBUG: Successfully parsed ${drivers.length} drivers');
+        return drivers;
       } else {
+        print('DEBUG: Response not successful or data is null');
         return [];
       }
     } catch (e) {
+      print('DEBUG: Error in getAllDrivers: $e');
       return [];
     }
   }
@@ -108,6 +88,33 @@ class DriverApiService {
       return response['success'] == true;
     } catch (e) {
       return false;
+    }
+  }
+
+  // Get driver statistics directly from backend
+  Future<Map<String, dynamic>> getDriverStatistics() async {
+    try {
+      print('DEBUG: Calling /Driver/statistics endpoint...');
+      final response = await _apiService.get('/Driver/statistics');
+
+      print('DEBUG: Statistics response: $response');
+
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'];
+        print('DEBUG: Statistics data: $data');
+
+        return {
+          'totalDrivers': data['totalDrivers'] ?? 0,
+          'activeDrivers': data['activeDrivers'] ?? 0,
+          'expiredDrivers': data['expiredDrivers'] ?? 0,
+        };
+      } else {
+        print('DEBUG: Statistics response not successful');
+        return {'totalDrivers': 0, 'activeDrivers': 0, 'expiredDrivers': 0};
+      }
+    } catch (e) {
+      print('DEBUG: Error getting driver statistics: $e');
+      return {'totalDrivers': 0, 'activeDrivers': 0, 'expiredDrivers': 0};
     }
   }
 }

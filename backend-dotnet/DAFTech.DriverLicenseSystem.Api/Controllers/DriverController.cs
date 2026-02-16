@@ -41,6 +41,7 @@ public class DriverController : ControllerBase
         }
     }
 
+
     [HttpGet("{licenseId}")]
     public async Task<ActionResult> GetDriver(string licenseId)
     {
@@ -87,11 +88,11 @@ public class DriverController : ControllerBase
             }
 
             // Register driver
-            var driverId = await _driverService.RegisterDriver(request, userId);
+            var driver = await _driverService.RegisterDriver(request, userId);
 
-            _logger.LogInformation("Driver registered successfully with ID: {DriverId}", driverId);
+            _logger.LogInformation("Driver registered successfully with ID: {DriverId}", driver.DriverId);
 
-            return ApiResponseHandler.Success(new { DriverId = driverId }, "Driver registered successfully");
+            return ApiResponseHandler.Success(new { DriverId = driver.DriverId }, "Driver registered successfully");
         }
         catch (Exception ex)
         {
@@ -99,4 +100,40 @@ public class DriverController : ControllerBase
             return ApiResponseHandler.Error("An error occurred during registration");
         }
     }
+
+    
+    [HttpGet("statistics")]
+public async Task<IActionResult> GetDriverStatistics()
+{
+    try
+    {
+        _logger.LogInformation("Fetching driver statistics");
+        
+        // Get all drivers using your existing service
+        var drivers = await _driverService.GetAllDrivers();
+        
+        // Count statistics
+        var driversList = drivers.ToList();
+        var totalDrivers = driversList.Count;
+        var activeDrivers = driversList.Count(d => d.Status?.ToLower() == "active");
+        var expiredDrivers = driversList.Count(d => d.Status?.ToLower() == "expired");
+
+        _logger.LogInformation("Statistics: Total={Total}, Active={Active}, Expired={Expired}", 
+            totalDrivers, activeDrivers, expiredDrivers);
+
+        return ApiResponseHandler.Success(new
+        {
+            totalDrivers = totalDrivers,
+            activeDrivers = activeDrivers,
+            expiredDrivers = expiredDrivers
+        }, "Statistics retrieved successfully");
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error fetching driver statistics");
+        return ApiResponseHandler.Error("An error occurred while fetching statistics");
+    }
+}
+
+
 }

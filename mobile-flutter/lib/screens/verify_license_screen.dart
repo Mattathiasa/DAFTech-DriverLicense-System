@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../models/driver.dart';
 import '../services/verification_api_service.dart';
 import '../services/driver_api_service.dart';
@@ -9,7 +9,9 @@ import '../services/ocr_service.dart';
 import '../services/notification_service.dart';
 
 class VerifyLicenseScreen extends StatefulWidget {
-  const VerifyLicenseScreen({super.key});
+  final String? qrData;
+
+  const VerifyLicenseScreen({super.key, this.qrData});
 
   @override
   State<VerifyLicenseScreen> createState() => _VerifyLicenseScreenState();
@@ -19,32 +21,93 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
   final _verificationApiService = VerificationApiService();
   final _driverApiService = DriverApiService();
   final _licenseIdController = TextEditingController();
-  final _notesController = TextEditingController();
+
+  late MobileScannerController _scannerController;
 
   bool _showScanner = false;
   bool _isVerifying = false;
   Driver? _verifiedDriver;
   String? _verificationResult;
   String? _verificationMessage;
-  QRViewController? _qrController;
-  final GlobalKey _qrKey = GlobalKey(debugLabel: 'QR');
+
+  @override
+  void initState() {
+    super.initState();
+    _scannerController = MobileScannerController(
+      detectionSpeed: DetectionSpeed.normal,
+      formats: [BarcodeFormat.qrCode],
+      autoStart: false,
+    );
+
+    // If QR data is provided, automatically verify
+    if (widget.qrData != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _verifyFromQRData(widget.qrData!);
+      });
+    }
+  }
 
   @override
   void dispose() {
+    _scannerController.dispose();
     _licenseIdController.dispose();
-    _notesController.dispose();
-    _qrController?.dispose();
     super.dispose();
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    _qrController = controller;
-    controller.scannedDataStream.listen((scanData) {
-      if (scanData.code != null && !_isVerifying) {
-        controller.pauseCamera();
-        _verifyFromQR(scanData.code!);
+  void _onDetect(BarcodeCapture capture) {
+    final List<Barcode> barcodes = capture.barcodes;
+    print('========== QR DETECTION ==========');
+    print('Barcodes detected: ${barcodes.length}');
+
+    if (barcodes.isNotEmpty && !_isVerifying) {
+      final barcode = barcodes.first;
+
+      // Log all available data from the barcode
+      print('Barcode Type: ${barcode.type}');
+      print('Barcode Format: ${barcode.format}');
+      print('Raw Value: ${barcode.rawValue}');
+      print('Display Value: ${barcode.displayValue}');
+      print('Raw Bytes: ${barcode.rawBytes}');
+
+      // Try to get the actual QR data
+      String? qrData = barcode.rawValue;
+
+      // If rawValue is null or empty, try displayValue
+      if (qrData == null || qrData.isEmpty) {
+        qrData = barcode.displayValue;
+        print('Using displayValue instead: $qrData');
       }
-    });
+
+      // If still null, try to decode from raw bytes
+      if (qrData == null || qrData.isEmpty) {
+        if (barcode.rawBytes != null && barcode.rawBytes!.isNotEmpty) {
+          try {
+            qrData = String.fromCharCodes(barcode.rawBytes!);
+            print('Decoded from rawBytes: $qrData');
+          } catch (e) {
+            print('Failed to decode rawBytes: $e');
+          }
+        }
+      }
+
+      print('Final QR Data to process: $qrData');
+      print('QR Data length: ${qrData?.length ?? 0}');
+      print('==================================');
+
+      if (qrData != null && qrData.isNotEmpty) {
+        _verifyFromQR(qrData);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'QR code detected but no data could be read',
+              style: GoogleFonts.outfit(),
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _verifyFromQR(String qrData) async {
@@ -54,6 +117,23 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
     });
 
     await Future.delayed(const Duration(milliseconds: 500));
+
+    try {
+      // Extract data from QR using real OCRService
+      final extractedData = OCRService.parseQRData(qrData);
+      final licenseId = extractedData['licenseId'] ?? '';
+
+      _licenseIdController.text = licenseId;
+      await _performVerification(licenseId, qrRawData: qrData);
+    } catch (e) {
+      setState(() {
+        _isVerifying = false;
+      });
+    }
+  }
+
+  Future<void> _verifyFromQRData(String qrData) async {
+    setState(() => _isVerifying = true);
 
     try {
       // Extract data from QR using real OCRService
@@ -96,12 +176,11 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
     _licenseIdController.text = normalizedId;
 
     setState(() => _isVerifying = true);
-    await _performVerification(normalizedId, notes: _notesController.text);
+    await _performVerification(normalizedId);
   }
 
   Future<void> _performVerification(
     String licenseId, {
-    String? notes,
     String? qrRawData,
   }) async {
     setState(() => _isVerifying = true);
@@ -110,10 +189,16 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
       // Use the provided raw QR data or fallback to the controller text
       final finalQrData = qrRawData ?? _licenseIdController.text;
 
+      print('DEBUG: Verifying license ID: "$licenseId"');
+      print('DEBUG: QR Raw Data: "$finalQrData"');
+
       final result = await _verificationApiService.verifyLicense(
         licenseId: licenseId,
         qrRawData: finalQrData,
-        notes: notes,
+      );
+
+      print(
+        'DEBUG: Verification result - isReal: ${result.isReal}, isActive: ${result.isActive}',
       );
 
       // Fetch full driver details if successfully verified
@@ -124,9 +209,14 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
 
       setState(() {
         _verifiedDriver = driver;
-        _verificationResult = result.isReal
-            ? (result.isActive ? 'real' : 'expired')
-            : 'fake';
+        // Determine status: real, fake, expired, or active
+        if (!result.isReal) {
+          _verificationResult = 'fake';
+        } else if (result.isActive) {
+          _verificationResult = 'active';
+        } else {
+          _verificationResult = 'expired';
+        }
         _verificationMessage = result.message;
         _isVerifying = false;
       });
@@ -173,7 +263,6 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
   void _reset() {
     setState(() {
       _licenseIdController.clear();
-      _notesController.clear();
       _verifiedDriver = null;
       _verificationResult = null;
       _verificationMessage = null;
@@ -183,6 +272,8 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
 
   MaterialColor _getResultColor() {
     switch (_verificationResult) {
+      case 'active':
+        return Colors.green;
       case 'real':
         return Colors.teal;
       case 'expired':
@@ -196,12 +287,14 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
 
   IconData _getResultIcon() {
     switch (_verificationResult) {
+      case 'active':
+        return Icons.check_circle_rounded;
       case 'real':
         return Icons.verified_rounded;
       case 'expired':
         return Icons.warning_rounded;
       case 'fake':
-        return Icons.error_rounded;
+        return Icons.cancel_rounded;
       default:
         return Icons.help_rounded;
     }
@@ -209,12 +302,14 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
 
   String _getResultTitle() {
     switch (_verificationResult) {
+      case 'active':
+        return 'Active License';
       case 'real':
-        return 'Valid License';
+        return 'Real License';
       case 'expired':
         return 'Expired License';
       case 'fake':
-        return 'Invalid License';
+        return 'Fake License';
       default:
         return 'Unknown';
     }
@@ -225,12 +320,14 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
       return _verificationMessage!;
     }
     switch (_verificationResult) {
+      case 'active':
+        return 'This license is genuine and currently active in the system.';
       case 'real':
-        return 'This license is valid and active in the system.';
+        return 'This license is authentic and registered in the system.';
       case 'expired':
-        return 'This license has technical expiration and needs renewal.';
+        return 'This license is real but has expired and needs renewal.';
       case 'fake':
-        return 'This license ID was not found in our central registry.';
+        return 'This license is fake and not found in our central registry.';
       default:
         return '';
     }
@@ -247,17 +344,7 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
   Widget _buildScanner() {
     return Stack(
       children: [
-        QRView(
-          key: _qrKey,
-          onQRViewCreated: _onQRViewCreated,
-          overlay: QrScannerOverlayShape(
-            borderColor: Colors.teal,
-            borderRadius: 16,
-            borderLength: 40,
-            borderWidth: 8,
-            cutOutSize: MediaQuery.of(context).size.width * 0.8,
-          ),
-        ),
+        MobileScanner(controller: _scannerController, onDetect: _onDetect),
         SafeArea(
           child: Column(
             children: [
@@ -273,8 +360,8 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
                     children: [
                       IconButton(
                         onPressed: () {
+                          _scannerController.stop();
                           setState(() => _showScanner = false);
-                          _qrController?.dispose();
                         },
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                       ),
@@ -291,7 +378,7 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
                             ),
                           ),
                           Text(
-                            'Align the code within the frame',
+                            'Point camera at QR code',
                             style: GoogleFonts.outfit(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.7),
@@ -304,6 +391,65 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+        // Scanning indicator at bottom
+        Positioned(
+          bottom: 40,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.teal.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Scanning...',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Flash Toggle
+        Positioned(
+          bottom: 120,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: () => _scannerController.toggleTorch(),
+                icon: const Icon(
+                  Icons.flashlight_on,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                tooltip: 'Toggle Flash',
+              ),
+            ),
           ),
         ),
       ],
@@ -474,7 +620,10 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
           child: ElevatedButton.icon(
             onPressed: _isVerifying
                 ? null
-                : () => setState(() => _showScanner = true),
+                : () {
+                    setState(() => _showScanner = true);
+                    _scannerController.start();
+                  },
             icon: const Icon(Icons.qr_code_scanner_rounded),
             label: Text(
               'Scan QR Code',
@@ -556,50 +705,6 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-
-        // Notes Input
-        FadeInUp(
-          delay: const Duration(milliseconds: 350),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _notesController,
-              enabled: !_isVerifying,
-              style: GoogleFonts.outfit(),
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: 'Verification Notes (Optional)',
-                labelStyle: GoogleFonts.outfit(color: Colors.blueGrey.shade400),
-                prefixIcon: Icon(
-                  Icons.note_add_rounded,
-                  color: Colors.teal.shade600,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 20,
-                  horizontal: 16,
-                ),
-              ),
-            ),
-          ),
-        ),
-
         const SizedBox(height: 16),
         FadeInUp(
           delay: const Duration(milliseconds: 400),

@@ -46,9 +46,7 @@ class _VerificationLogsScreenState extends State<VerificationLogsScreen> {
     setState(() {
       final query = _searchController.text.toLowerCase();
       _filteredLogs = _allLogs.where((log) {
-        final matchesSearch =
-            log.licenseId.toLowerCase().contains(query) ||
-            (log.driverName?.toLowerCase().contains(query) ?? false);
+        final matchesSearch = log.licenseId.toLowerCase().contains(query);
 
         bool matchesStatus = true;
         if (_statusFilter == 'real') {
@@ -421,13 +419,6 @@ class _LogCard extends StatelessWidget {
                           fontSize: 16,
                         ),
                       ),
-                      Text(
-                        log.driverName ?? 'Unknown Driver',
-                        style: GoogleFonts.outfit(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -473,37 +464,6 @@ class _LogCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (log.notes != null && log.notes!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.notes_rounded,
-                      size: 16,
-                      color: Colors.blueGrey.shade400,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        log.notes!,
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.blueGrey.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ],
         ),
       ),

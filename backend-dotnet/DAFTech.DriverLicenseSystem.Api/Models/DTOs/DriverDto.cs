@@ -12,4 +12,6 @@ public class DriverDto
     public string? OCRRawText { get; set; }
     public DateTime CreatedDate { get; set; }
     public int RegisteredBy { get; set; }
+    public string Status { get; set; }
+    public string RegisteredByUsername { get; set; }  // just a string, not User object
 }

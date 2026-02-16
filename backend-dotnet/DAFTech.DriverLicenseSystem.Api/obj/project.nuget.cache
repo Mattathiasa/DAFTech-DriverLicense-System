@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "EJ+C4tQG5a8=",
+  "dgSpecHash": "38X7l8w0ChM=",
   "success": true,
-  "projectFilePath": "C:\\Users\\matta\\Desktop\\DAFTech\\driver_license_registration_and_verification_system\\backend\\DAFTech.DriverLicenseSystem.Api\\DAFTech.DriverLicenseSystem.Api.csproj",
+  "projectFilePath": "C:\\Users\\matta\\Desktop\\DAFTech\\backend-dotnet\\DAFTech.DriverLicenseSystem.Api\\DAFTech.DriverLicenseSystem.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\matta\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\matta\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

@@ -8,5 +8,8 @@ public class DriverResponseDto
     public DateTime DateOfBirth { get; set; }
     public string LicenseType { get; set; } = string.Empty;
     public DateTime ExpiryDate { get; set; }
+    public string? QRRawData { get; set; }
+    public string? OCRRawText { get; set; }
     public DateTime CreatedDate { get; set; }
+    public string RegisteredBy { get; set; } = string.Empty;
 }

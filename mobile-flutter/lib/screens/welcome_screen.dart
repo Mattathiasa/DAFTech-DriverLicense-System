@@ -50,7 +50,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'DLRS',
+                      'DAFTech DLS',
                       style: GoogleFonts.outfit(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
@@ -59,7 +59,7 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Driver License Registration System',
+                      'DAFTech DriverLicense System',
                       style: GoogleFonts.outfit(
                         fontSize: 16,
                         color: Colors.white.withValues(alpha: 0.8),

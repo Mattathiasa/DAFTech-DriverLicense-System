@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
-import '../services/ocr_service.dart';
-import 'register_driver_screen.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'verify_license_screen.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -14,19 +12,8 @@ class QRScannerScreen extends StatefulWidget {
 }
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
   String? scannedData;
   bool isProcessing = false;
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller?.pauseCamera();
-    }
-    controller?.resumeCamera();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,18 +22,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       body: Stack(
         children: [
           // QR Scanner View
-          QRView(
-            key: qrKey,
-            onQRViewCreated: _onQRViewCreated,
-            overlay: QrScannerOverlayShape(
-              borderColor: Colors.teal,
-              borderRadius: 16,
-              borderLength: 40,
-              borderWidth: 8,
-              cutOutSize: MediaQuery.of(context).size.width * 0.8,
-            ),
-            onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
-          ),
+          MobileScanner(onDetect: _onDetect),
 
           // Top Bar
           SafeArea(
@@ -205,94 +181,47 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ),
           ),
 
-          // Flash Toggle
-          Positioned(
-            bottom: 100,
-            right: 20,
-            child: FadeInRight(
-              delay: const Duration(milliseconds: 300),
-              child: FloatingActionButton(
-                onPressed: () async {
-                  await controller?.toggleFlash();
-                  setState(() {});
-                },
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                child: FutureBuilder<bool?>(
-                  future: controller?.getFlashStatus(),
-                  builder: (context, snapshot) {
-                    final isFlashOn = snapshot.data ?? false;
-                    return Icon(
-                      isFlashOn ? Icons.flash_on : Icons.flash_off,
-                      color: Colors.white,
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
+          // Flash Toggle - Removed (no controller access)
         ],
       ),
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      if (isProcessing) return;
+  void _onDetect(BarcodeCapture capture) {
+    if (isProcessing) return;
 
-      if (scanData.code != null && scanData.code!.isNotEmpty) {
+    final List<Barcode> barcodes = capture.barcodes;
+    print('DEBUG: Barcodes detected: ${barcodes.length}');
+
+    if (barcodes.isNotEmpty) {
+      final code = barcodes.first.rawValue;
+      print('DEBUG: QR Code value: $code');
+
+      if (code != null && code.isNotEmpty) {
         setState(() {
-          scannedData = scanData.code;
+          scannedData = code;
           isProcessing = true;
         });
 
-        // Pause camera
-        controller.pauseCamera();
+        // Stop camera
+        // Camera will stop automatically when navigating away
 
         // Parse QR data
-        _processQRData(scanData.code!);
+        _processQRData(code);
       }
-    });
-  }
-
-  void _processQRData(String qrData) async {
-    // Small delay for UI feedback (reduced for faster processing)
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final data = OCRService.parseQRData(qrData);
-
-    if (mounted) {
-      // Navigate to registration with pre-filled data
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RegisterDriverScreen(prefilledData: data),
-        ),
-      );
     }
   }
 
-  void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
-    if (!p) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Camera permission denied. Please enable it in settings.',
-                  style: GoogleFonts.outfit(),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+  void _processQRData(String qrData) async {
+    // Small delay for UI feedback
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (mounted) {
+      // Navigate to verification screen with QR data
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VerifyLicenseScreen(qrData: qrData),
         ),
       );
     }
@@ -300,7 +229,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   @override
   void dispose() {
-    controller?.dispose();
     super.dispose();
   }
 }

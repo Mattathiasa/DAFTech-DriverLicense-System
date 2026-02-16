@@ -5,15 +5,11 @@ class VerificationResult {
   final bool isReal;
   final bool isActive;
   final String message;
-  final String? driverName;
-  final String? expiryDate;
 
   VerificationResult({
     required this.isReal,
     required this.isActive,
     required this.message,
-    this.driverName,
-    this.expiryDate,
   });
 }
 
@@ -24,13 +20,11 @@ class VerificationApiService {
   Future<VerificationResult> verifyLicense({
     required String licenseId,
     required String qrRawData,
-    String? notes,
   }) async {
     try {
       final response = await _apiService.post('/Verification/verify', {
         'licenseId': licenseId,
         'qrRawData': qrRawData,
-        'notes': notes,
       });
 
       if (response['success'] == true && response['data'] != null) {
@@ -39,8 +33,6 @@ class VerificationApiService {
           isReal: data['isReal'] ?? false,
           isActive: data['isActive'] ?? false,
           message: data['message'] ?? '',
-          driverName: data['driverName'],
-          expiryDate: data['expiryDate'],
         );
       } else {
         throw Exception(response['message'] ?? 'Verification failed');
@@ -130,6 +122,29 @@ class VerificationApiService {
       return null;
     } catch (e) {
       return null;
+    }
+  }
+
+  // Delete verification log
+  Future<bool> deleteLog(String logId) async {
+    try {
+      final response = await _apiService.delete('/Verification/logs/$logId');
+      return response['success'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Delete multiple logs
+  Future<bool> deleteLogs(List<String> logIds) async {
+    try {
+      final response = await _apiService.post(
+        '/Verification/logs/delete-batch',
+        {'logIds': logIds},
+      );
+      return response['success'] == true;
+    } catch (e) {
+      return false;
     }
   }
 }

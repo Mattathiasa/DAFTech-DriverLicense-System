@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../services/auth_api_service.dart';
 import '../services/verification_api_service.dart';
+import '../services/driver_api_service.dart';
 import 'welcome_screen.dart';
 import 'scan_license_screen.dart';
 import 'register_driver_screen.dart';
@@ -21,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _verificationApiService = VerificationApiService();
+  final _driverApiService = DriverApiService();
   final _authApiService = AuthApiService();
   String? _username;
   Map<String, dynamic> _statistics = {
@@ -41,7 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
 
     try {
+      print('DEBUG HOME: Starting to load data...');
+
       final isLoggedIn = await _authApiService.isLoggedIn();
+      print('DEBUG HOME: Is logged in: $isLoggedIn');
+
       if (!isLoggedIn) {
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
@@ -52,9 +59,18 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      final stats = await _verificationApiService.getDashboardStats();
+      print('DEBUG HOME: Fetching driver statistics...');
+      // Get driver statistics from Drivers table
+      final stats = await _driverApiService.getDriverStatistics();
+      print('DEBUG HOME: Stats received: $stats');
+
+      print('DEBUG HOME: Fetching verification logs...');
       final logs = await _verificationApiService.getVerificationLogs();
+      print('DEBUG HOME: Logs count: ${logs.length}');
+
+      print('DEBUG HOME: Fetching username...');
       final username = await _authApiService.getUsername();
+      print('DEBUG HOME: Username: $username');
 
       setState(() {
         _username = username ?? "Administrator";
@@ -62,7 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _recentLogs = logs.take(5).toList();
         _isLoading = false;
       });
-    } catch (e) {
+
+      print('DEBUG HOME: State updated successfully');
+      print('DEBUG HOME: Final statistics in state: $_statistics');
+    } catch (e, stackTrace) {
+      print('DEBUG HOME: Error loading data: $e');
+      print('DEBUG HOME: Stack trace: $stackTrace');
       setState(() => _isLoading = false);
     }
   }
@@ -249,13 +270,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Expanded(
                                     child: FadeInUp(
                                       delay: const Duration(milliseconds: 100),
-                                      child: _StatCard(
-                                        title: 'Drivers',
-                                        value: _statistics['totalDrivers']
-                                            .toString(),
-                                        icon: Icons.people_alt_rounded,
-                                        color: Colors.white,
-                                        textColor: Colors.blue.shade900,
+                                      child: Builder(
+                                        builder: (context) {
+                                          print(
+                                            'DEBUG HOME DISPLAY: totalDrivers = ${_statistics['totalDrivers']}',
+                                          );
+                                          return _StatCard(
+                                            title: 'Drivers',
+                                            value: _statistics['totalDrivers']
+                                                .toString(),
+                                            icon: Icons.people_alt_rounded,
+                                            color: Colors.white,
+                                            textColor: Colors.blue.shade900,
+                                          );
+                                        },
                                       ),
                                     ),
                                   ),
@@ -263,13 +291,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Expanded(
                                     child: FadeInUp(
                                       delay: const Duration(milliseconds: 200),
-                                      child: _StatCard(
-                                        title: 'Active',
-                                        value: _statistics['activeDrivers']
-                                            .toString(),
-                                        icon: Icons.verified_rounded,
-                                        color: Colors.teal.shade400,
-                                        textColor: Colors.white,
+                                      child: Builder(
+                                        builder: (context) {
+                                          print(
+                                            'DEBUG HOME DISPLAY: activeDrivers = ${_statistics['activeDrivers']}',
+                                          );
+                                          return _StatCard(
+                                            title: 'Active',
+                                            value: _statistics['activeDrivers']
+                                                .toString(),
+                                            icon: Icons.verified_rounded,
+                                            color: Colors.teal.shade400,
+                                            textColor: Colors.white,
+                                          );
+                                        },
                                       ),
                                     ),
                                   ),
@@ -321,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: _FeatureCard(
                                   title: 'Scan License (OCR)',
                                   description:
-                                      'Extract data using AI recognition',
+                                      'Register drivers by scanning physical license',
                                   icon: Icons.document_scanner_rounded,
                                   color: Colors.indigo,
                                   onTap: () => _navigateToScreen(
@@ -336,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: _FeatureCard(
                                   title: 'Scan QR Code',
                                   description:
-                                      'Quick registration from QR code',
+                                      'Verify drivers by scanning QR code',
                                   icon: Icons.qr_code_scanner_rounded,
                                   color: Colors.purple,
                                   onTap: () => _navigateToScreen(
@@ -351,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: _FeatureCard(
                                   title: 'Register Driver',
                                   description:
-                                      'Issue new digital license records',
+                                      'Manually register new driver license',
                                   icon: Icons.person_add_alt_1_rounded,
                                   color: Colors.blue,
                                   onTap: () => _navigateToScreen(
@@ -365,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 delay: const Duration(milliseconds: 700),
                                 child: _FeatureCard(
                                   title: 'Verify Authenticity',
-                                  description: 'Real-time database validation',
+                                  description: 'Verify driver license manually',
                                   icon: Icons.verified_user_rounded,
                                   color: Colors.teal,
                                   onTap: () => _navigateToScreen(
@@ -505,14 +540,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             title: Text(
-              log.driverName ?? 'Unknown Driver',
+              'License: ${log.licenseId}',
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
             ),
             subtitle: Text(
-              log.licenseId,
+              DateFormat('MMM dd, yyyy HH:mm').format(log.timestamp),
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 color: Colors.blueGrey.shade400,

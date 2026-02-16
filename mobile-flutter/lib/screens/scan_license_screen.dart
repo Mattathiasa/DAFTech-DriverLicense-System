@@ -193,7 +193,7 @@ class _ScanLicenseScreenState extends State<ScanLicenseScreen> {
                               ),
                             ),
                             Text(
-                              'Extract data using AI recognition',
+                              'Extract data using OCR recognition',
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 color: Colors.white.withValues(alpha: 0.8),

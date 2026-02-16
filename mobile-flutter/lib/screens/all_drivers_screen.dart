@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../models/driver.dart';
 import '../services/driver_api_service.dart';
 
@@ -178,15 +177,13 @@ class _AllDriversScreenState extends State<AllDriversScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            driver.fullName,
+                            'Driver Details',
                             style: GoogleFonts.outfit(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: Colors.blueGrey.shade900,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          _StatusBadge(status: driver.status),
                         ],
                       ),
                     ),
@@ -194,87 +191,24 @@ class _AllDriversScreenState extends State<AllDriversScreen> {
                 ),
                 const SizedBox(height: 32),
 
+                _DetailRow(label: 'Driver ID', value: driver.id),
                 _DetailRow(label: 'License ID', value: driver.licenseId),
+                _DetailRow(label: 'Full Name', value: driver.fullName),
                 _DetailRow(label: 'Date of Birth', value: driver.dateOfBirth),
-                _DetailRow(label: 'Address', value: driver.address),
                 _DetailRow(
-                  label: 'Grade (Gerad)',
+                  label: 'License Type (Grade)',
                   value: 'Class ${driver.licenseType}',
                 ),
-                _DetailRow(label: 'Issue Date', value: driver.issueDate),
                 _DetailRow(label: 'Expiry Date', value: driver.expiryDate),
+                if (driver.qrData != null)
+                  _DetailRow(label: 'QR Raw Data', value: driver.qrData!),
+                if (driver.ocrRawText != null)
+                  _DetailRow(label: 'OCR Raw Text', value: driver.ocrRawText!),
                 _DetailRow(
-                  label: 'Registration',
+                  label: 'Created Date',
                   value: _formatDateTime(driver.registeredAt),
-                  trailing: TextButton(
-                    onPressed: () => _updateStatus(driver),
-                    child: Text(
-                      'Change Status',
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                  ),
                 ),
-
-                if (driver.qrData != null) ...[
-                  const SizedBox(height: 32),
-                  const Divider(),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          'Official Digital QR',
-                          style: GoogleFonts.outfit(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blueGrey,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.grey.shade100),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: QrImageView(
-                            data: driver.qrData!,
-                            version: QrVersions.auto,
-                            size: 180.0,
-                            eyeStyle: const QrEyeStyle(
-                              eyeShape: QrEyeShape.square,
-                              color: Colors.black,
-                            ),
-                            dataModuleStyle: const QrDataModuleStyle(
-                              dataModuleShape: QrDataModuleShape.square,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Scan to verify authenticity',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                _DetailRow(label: 'Registered By', value: driver.registeredBy),
 
                 const SizedBox(height: 40),
                 SizedBox(
@@ -298,69 +232,6 @@ class _AllDriversScreenState extends State<AllDriversScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _updateStatus(Driver driver) async {
-    final newStatus = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Update License Status',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        children: [
-          _buildStatusOption(context, 'active', Colors.teal),
-          _buildStatusOption(context, 'expired', Colors.orange),
-          _buildStatusOption(context, 'suspended', Colors.red),
-          _buildStatusOption(context, 'revoked', Colors.black),
-        ],
-      ),
-    );
-
-    if (newStatus != null && newStatus != driver.status) {
-      final success = await _driverApiService.updateDriverStatus(
-        driver.licenseId,
-        newStatus,
-      );
-      if (success && mounted) {
-        Navigator.pop(context); // Close details
-        _loadDrivers(); // Reload list
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Status updated to ${newStatus.toUpperCase()}'),
-            backgroundColor: Colors.teal,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  Widget _buildStatusOption(BuildContext context, String value, Color color) {
-    return SimpleDialogOption(
-      onPressed: () => Navigator.pop(context, value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          children: [
-            Container(
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              value.toUpperCase(),
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w600,
-                color: Colors.blueGrey.shade800,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -798,9 +669,8 @@ class _StatusBadge extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
-  final Widget? trailing;
 
-  const _DetailRow({required this.label, required this.value, this.trailing});
+  const _DetailRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -828,7 +698,6 @@ class _DetailRow extends StatelessWidget {
               ),
             ),
           ),
-          ?trailing,
         ],
       ),
     );

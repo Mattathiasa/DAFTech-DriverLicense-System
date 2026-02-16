@@ -31,14 +31,56 @@ public class DriverService
         return await _driverRepository.Create(driver);
     }
 
-    public async Task<IEnumerable<Driver>> GetAllDrivers()
+    public async Task<IEnumerable<DriverDto>> GetAllDrivers()
     {
-        return await _driverRepository.GetAll();
+        var drivers = await _driverRepository.GetAll();
+        
+        // Map to DTO to avoid circular references
+        return drivers.Select(d => new DriverDto
+        {
+            DriverId = d.DriverId,
+            LicenseId = d.LicenseId,
+            FullName = d.FullName,
+            DateOfBirth = d.DateOfBirth,
+            LicenseType = d.LicenseType,
+            ExpiryDate = d.ExpiryDate,
+            QRRawData = d.QRRawData,
+            OCRRawText = d.OCRRawText,
+            CreatedDate = d.CreatedDate,
+            RegisteredBy = d.RegisteredBy,
+            Status = DetermineStatus(d.ExpiryDate),
+            RegisteredByUsername = d.RegisteredByUser?.Username ?? "Unknown"
+        });
     }
 
-    public async Task<Driver?> GetDriverByLicenseId(string licenseId)
+    public async Task<DriverDto?> GetDriverByLicenseId(string licenseId)
     {
-        return await _driverRepository.GetByLicenseId(licenseId);
+        var driver = await _driverRepository.GetByLicenseId(licenseId);
+        
+        if (driver == null)
+            return null;
+
+        // Map to DTO to avoid circular references
+        return new DriverDto
+        {
+            DriverId = driver.DriverId,
+            LicenseId = driver.LicenseId,
+            FullName = driver.FullName,
+            DateOfBirth = driver.DateOfBirth,
+            LicenseType = driver.LicenseType,
+            ExpiryDate = driver.ExpiryDate,
+            QRRawData = driver.QRRawData,
+            OCRRawText = driver.OCRRawText,
+            CreatedDate = driver.CreatedDate,
+            RegisteredBy = driver.RegisteredBy,
+            Status = DetermineStatus(driver.ExpiryDate),
+            RegisteredByUsername = driver.RegisteredByUser?.Username ?? "Unknown"
+        };
+    }
+
+    private static string DetermineStatus(DateTime expiryDate)
+    {
+        return expiryDate >= DateTime.UtcNow ? "active" : "expired";
     }
 
     public async Task<bool> LicenseExists(string licenseId)
