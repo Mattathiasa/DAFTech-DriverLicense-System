@@ -14,6 +14,17 @@ class QRScannerScreen extends StatefulWidget {
 class _QRScannerScreenState extends State<QRScannerScreen> {
   String? scannedData;
   bool isProcessing = false;
+  late MobileScannerController _scannerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scannerController = MobileScannerController(
+      detectionSpeed: DetectionSpeed.normal,
+      formats: [BarcodeFormat.qrCode],
+      autoStart: true,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +33,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       body: Stack(
         children: [
           // QR Scanner View
-          MobileScanner(onDetect: _onDetect),
+          MobileScanner(controller: _scannerController, onDetect: _onDetect),
 
           // Top Bar
           SafeArea(
@@ -181,7 +192,40 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ),
           ),
 
-          // Flash Toggle - Removed (no controller access)
+          // Torch/Flash Toggle Button
+          Positioned(
+            bottom: 100,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: FadeInUp(
+                delay: const Duration(milliseconds: 300),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    onPressed: () => _scannerController.toggleTorch(),
+                    icon: const Icon(
+                      Icons.flashlight_on_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    tooltip: 'Toggle Flashlight',
+                    padding: const EdgeInsets.all(16),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -229,6 +273,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   @override
   void dispose() {
+    _scannerController.dispose();
     super.dispose();
   }
 }
