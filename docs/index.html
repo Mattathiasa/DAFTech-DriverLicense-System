@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DAFTech Driver License System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:      #1565C0;
+      --blue-dark: #0D47A1;
+      --blue-light:#1976D2;
+      --teal:      #00796B;
+      --teal-light:#009688;
+      --bg:        #F8FAFC;
+      --card:      #FFFFFF;
+      --text:      #1A2332;
+      --muted:     #607080;
+      --border:    #E2E8F0;
+      --radius:    16px;
+      --shadow:    0 4px 24px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #0D47A1 0%, #1565C0 50%, #00796B 100%);
+      color: #fff;
+      padding: 80px 24px 100px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 13px; font-weight: 500;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+      line-height: 1.15;
+    }
+    .hero h1 span { color: #80DEEA; }
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      opacity: .85;
+      max-width: 580px;
+      margin: 0 auto 40px;
+      font-weight: 300;
+    }
+    .hero-btns {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 28px;
+      border-radius: 100px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      border: none;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    .btn-primary {
+      background: #fff; color: var(--blue);
+    }
+    .btn-outline {
+      background: rgba(255,255,255,.12);
+      border: 2px solid rgba(255,255,255,.5);
+      color: #fff;
+    }
+    .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ── WAVE ── */
+    .wave { display: block; margin-top: -2px; }
+
+    /* ── SECTIONS ── */
+    section { padding: 80px 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 700; color: var(--text);
+      margin-bottom: 12px;
+    }
+    .section-sub {
+      color: var(--muted); max-width: 560px; margin-bottom: 56px;
+    }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,.12); }
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin-bottom: 18px;
+    }
+    .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── DEMO SECTION ── */
+    .demo-section { background: linear-gradient(135deg, #E3F2FD, #E0F2F1); }
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+    @media (max-width: 700px) { .demo-grid { grid-template-columns: 1fr; } }
+    .demo-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .demo-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--blue-dark); }
+    .cred-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cred-row:last-child { border-bottom: none; }
+    .cred-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .cred-value {
+      font-family: 'Courier New', monospace;
+      font-size: 14px; font-weight: 700;
+      background: #EEF2FF;
+      padding: 4px 12px;
+      border-radius: 8px;
+      color: var(--blue-dark);
+    }
+    .driver-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .driver-table th {
+      text-align: left; padding: 8px 10px;
+      background: #F0F4F8;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .driver-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); }
+    .driver-table tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-active { background: #E8F5E9; color: #2E7D32; }
+    .badge-expired { background: #FFF3E0; color: #E65100; }
+
+    /* ── INSTALL ── */
+    .install-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+    .step {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .step-number {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 700; font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .step h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 13px; color: var(--muted); }
+
+    /* ── STACK ── */
+    .stack-section { background: var(--blue-dark); color: #fff; text-align: center; }
+    .stack-section .section-label { color: #80DEEA; }
+    .stack-section .section-title { color: #fff; }
+    .stack-section .section-sub { color: rgba(255,255,255,.6); margin: 0 auto 48px; }
+    .tech-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+    .tech-badge {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 100px;
+      padding: 10px 22px;
+      font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #0A1929;
+      color: rgba(255,255,255,.5);
+      text-align: center;
+      padding: 40px 24px;
+      font-size: 14px;
+    }
+    footer a { color: #80DEEA; font-weight: 600; }
+    footer a:hover { text-decoration: underline; }
+    .footer-links { display: flex; justify-content: center; gap: 32px; margin-bottom: 20px; flex-wrap: wrap; }
+    .footer-links a { color: rgba(255,255,255,.7); font-weight: 500; }
+    .footer-links a:hover { color: #fff; }
+  </style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      Open Source · Demo Available
+    </div>
+    <h1>DAFTech <span>Driver License</span> System</h1>
+    <p>A complete driver license registration and verification platform. Register drivers, scan licenses with OCR, and verify authenticity via QR code — all in one app.</p>
+    <div class="hero-btns">
+      <a href="https://github.com/Mattathiasa/DAFTech-DriverLicense-System/releases/download/demo-v1.0.0/DAFTech-DriverLicense-Demo-v1.0.0.apk" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+        Download Demo APK
+      </a>
+      <a href="https://github.com/Mattathiasa/DAFTech-DriverLicense-System" class="btn btn-outline" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</header>
+
+<svg class="wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 60" preserveAspectRatio="none">
+  <path fill="#F8FAFC" d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z"/>
+</svg>
+
+<!-- ── FEATURES ── -->
+<section>
+  <div class="container">
+    <p class="section-label">What it does</p>
+    <h2 class="section-title">Everything you need to manage driver licenses</h2>
+    <p class="section-sub">Six core modules, all accessible from the home dashboard.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#E3F2FD;">📷</div>
+        <h3>OCR License Scan</h3>
+        <p>Point the camera at a physical license. Google ML Kit reads the text and auto-fills the registration form.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#E0F2F1;">🔍</div>
+        <h3>QR Code Verification</h3>
+        <p>Scan a license QR code to instantly verify if it's genuine, active, or expired against the registry.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#F3E5F5;">📝</div>
+        <h3>Manual Registration</h3>
+        <p>Register a new driver by filling in the license ID, full name, license class, and expiry date manually.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#E8F5E9;">✅</div>
+        <h3>Authenticity Check</h3>
+        <p>Enter a license ID or scan a QR code to get an instant result: Active, Expired, or Fake.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#FFF8E1;">🗃️</div>
+        <h3>Driver Database</h3>
+        <p>Browse, search, sort, and filter the full registry of registered drivers with status indicators.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#FBE9E7;">📋</div>
+        <h3>Audit Logs</h3>
+        <p>Every verification is logged with a timestamp and result, forming a complete audit trail.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DEMO SECTION ── -->
+<section class="demo-section">
+  <div class="container">
+    <p class="section-label">Try it now</p>
+    <h2 class="section-title">Demo credentials &amp; sample data</h2>
+    <p class="section-sub">Install the APK and log in with the demo account. Five drivers are pre-loaded so you can verify immediately.</p>
+    <div class="demo-grid">
+      <div class="demo-card">
+        <h3>🔑 Login Credentials</h3>
+        <div class="cred-row">
+          <span class="cred-label">Username</span>
+          <span class="cred-value">demo</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Password</span>
+          <span class="cred-value">demo123</span>
+        </div>
+        <br/>
+        <p style="font-size:13px;color:var(--muted);">
+          💡 To test QR verification, encode any License ID below in a free QR generator (e.g. qr-code-generator.com) and scan it with the app.
+        </p>
+      </div>
+      <div class="demo-card">
+        <h3>👥 Pre-loaded Drivers</h3>
+        <table class="driver-table">
+          <thead>
+            <tr><th>License ID</th><th>Name</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>DL-2024-001</code></td>
+              <td>Abebe Girma</td>
+              <td><span class="badge badge-active">Active</span></td>
+            </tr>
+            <tr>
+              <td><code>DL-2024-002</code></td>
+              <td>Marta Kebede</td>
+              <td><span class="badge badge-active">Active</span></td>
+            </tr>
+            <tr>
+              <td><code>DL-2025-001</code></td>
+              <td>Yonas Teklu</td>
+              <td><span class="badge badge-active">Active</span></td>
+            </tr>
+            <tr>
+              <td><code>DL-2023-001</code></td>
+              <td>Tigist Wolde</td>
+              <td><span class="badge badge-expired">Expired</span></td>
+            </tr>
+            <tr>
+              <td><code>DL-2022-001</code></td>
+              <td>Solomon Negash</td>
+              <td><span class="badge badge-expired">Expired</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INSTALL ── -->
+<section>
+  <div class="container">
+    <p class="section-label">Getting started</p>
+    <h2 class="section-title">Install in 3 steps</h2>
+    <p class="section-sub">Works on any Android device — no account, no server, no internet required after install.</p>
+    <div class="install-steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Allow unknown sources</h3>
+        <p>On your Android device, go to <strong>Settings → Security</strong> and enable <em>Install from unknown sources</em> (or allow your browser to install apps).</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Download the APK</h3>
+        <p>Tap the <strong>Download Demo APK</strong> button above. The file is ~94 MB. Open it once the download completes.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Install &amp; explore</h3>
+        <p>Tap <strong>Install</strong> on the Android prompt. Open the app, log in with <code>demo / demo123</code>, and start exploring.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TECH STACK ── -->
+<section class="stack-section">
+  <div class="container">
+    <p class="section-label">Built with</p>
+    <h2 class="section-title">Modern cross-platform stack</h2>
+    <p class="section-sub">Flutter for the mobile frontend, .NET 8 for the backend API, and Google ML Kit for on-device OCR.</p>
+    <div class="tech-badges">
+      <div class="tech-badge">🐦 Flutter</div>
+      <div class="tech-badge">⚙️ .NET 8 / ASP.NET Core</div>
+      <div class="tech-badge">🔤 Google ML Kit OCR</div>
+      <div class="tech-badge">🗄️ SQL Server</div>
+      <div class="tech-badge">📱 Android</div>
+      <div class="tech-badge">🔐 JWT Auth</div>
+      <div class="tech-badge">📦 Entity Framework Core</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/Mattathiasa/DAFTech-DriverLicense-System" target="_blank" rel="noopener">GitHub Repository</a>
+    <a href="https://github.com/Mattathiasa/DAFTech-DriverLicense-System/releases/tag/demo-v1.0.0" target="_blank" rel="noopener">Release Notes</a>
+    <a href="https://github.com/Mattathiasa/DAFTech-DriverLicense-System/tree/demo" target="_blank" rel="noopener">Demo Branch</a>
+  </div>
+  <p>DAFTech Driver License System &nbsp;·&nbsp; Built with Flutter &amp; .NET &nbsp;·&nbsp;
+    <a href="https://github.com/Mattathiasa/DAFTech-DriverLicense-System" target="_blank" rel="noopener">github.com/Mattathiasa</a>
+  </p>
+</footer>
+
+</body>
+</html>
