@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
@@ -91,14 +92,14 @@ class ApiService {
   }) async {
     final headers = await getHeaders(includeAuth: includeAuth);
     final url = Uri.parse('$baseUrl$endpoint');
-    print('DEBUG: API GET request to $url');
+    debugPrint('DEBUG: API GET request to $url');
     try {
       final response = await http.get(url, headers: headers);
-      print('DEBUG: API Response status: ${response.statusCode}');
-      print('DEBUG: API Response body: ${response.body}');
+      debugPrint('DEBUG: API Response status: ${response.statusCode}');
+      debugPrint('DEBUG: API Response body: ${response.body}');
       return handleResponse(response);
     } catch (e) {
-      print('DEBUG: API Error: $e');
+      debugPrint('DEBUG: API Error: $e');
       rethrow;
     }
   }

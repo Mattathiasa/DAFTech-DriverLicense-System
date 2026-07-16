@@ -44,10 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
 
     try {
-      print('DEBUG HOME: Starting to load data...');
+      debugPrint('DEBUG HOME: Starting to load data...');
 
       final isLoggedIn = await _authApiService.isLoggedIn();
-      print('DEBUG HOME: Is logged in: $isLoggedIn');
+      debugPrint('DEBUG HOME: Is logged in: $isLoggedIn');
 
       if (!isLoggedIn) {
         if (mounted) {
@@ -59,18 +59,18 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      print('DEBUG HOME: Fetching driver statistics...');
+      debugPrint('DEBUG HOME: Fetching driver statistics...');
       // Get driver statistics from Drivers table
       final stats = await _driverApiService.getDriverStatistics();
-      print('DEBUG HOME: Stats received: $stats');
+      debugPrint('DEBUG HOME: Stats received: $stats');
 
-      print('DEBUG HOME: Fetching verification logs...');
+      debugPrint('DEBUG HOME: Fetching verification logs...');
       final logs = await _verificationApiService.getVerificationLogs();
-      print('DEBUG HOME: Logs count: ${logs.length}');
+      debugPrint('DEBUG HOME: Logs count: ${logs.length}');
 
-      print('DEBUG HOME: Fetching username...');
+      debugPrint('DEBUG HOME: Fetching username...');
       final username = await _authApiService.getUsername();
-      print('DEBUG HOME: Username: $username');
+      debugPrint('DEBUG HOME: Username: $username');
 
       setState(() {
         _username = username ?? "Administrator";
@@ -79,11 +79,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
 
-      print('DEBUG HOME: State updated successfully');
-      print('DEBUG HOME: Final statistics in state: $_statistics');
+      debugPrint('DEBUG HOME: State updated successfully');
+      debugPrint('DEBUG HOME: Final statistics in state: $_statistics');
     } catch (e, stackTrace) {
-      print('DEBUG HOME: Error loading data: $e');
-      print('DEBUG HOME: Stack trace: $stackTrace');
+      debugPrint('DEBUG HOME: Error loading data: $e');
+      debugPrint('DEBUG HOME: Stack trace: $stackTrace');
       setState(() => _isLoading = false);
     }
   }
@@ -191,8 +191,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Text(
                                           'Welcome back,',
                                           style: GoogleFonts.outfit(
-                                            color: Colors.white.withOpacity(
-                                              0.8,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.8,
                                             ),
                                             fontSize: 16,
                                           ),
@@ -272,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       delay: const Duration(milliseconds: 100),
                                       child: Builder(
                                         builder: (context) {
-                                          print(
+                                          debugPrint(
                                             'DEBUG HOME DISPLAY: totalDrivers = ${_statistics['totalDrivers']}',
                                           );
                                           return _StatCard(
@@ -293,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       delay: const Duration(milliseconds: 200),
                                       child: Builder(
                                         builder: (context) {
-                                          print(
+                                          debugPrint(
                                             'DEBUG HOME DISPLAY: activeDrivers = ${_statistics['activeDrivers']}',
                                           );
                                           return _StatCard(
@@ -516,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -530,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -592,7 +592,7 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -614,7 +614,7 @@ class _StatCard extends StatelessWidget {
           Text(
             title,
             style: GoogleFonts.outfit(
-              color: textColor.withOpacity(0.8),
+              color: textColor.withValues(alpha: 0.8),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -649,7 +649,7 @@ class _FeatureCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -667,7 +667,7 @@ class _FeatureCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Icon(icon, color: color, size: 30),

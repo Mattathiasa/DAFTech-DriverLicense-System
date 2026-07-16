@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Access the administrative portal',
                       style: GoogleFonts.outfit(
                         fontSize: 16,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.blue.shade700,
                           ),
                           filled: true,
-                          fillColor: Colors.blue.shade50.withOpacity(0.3),
+                          fillColor: Colors.blue.shade50.withValues(alpha: 0.3),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                             borderSide: BorderSide.none,
@@ -200,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                           ),
                           filled: true,
-                          fillColor: Colors.blue.shade50.withOpacity(0.3),
+                          fillColor: Colors.blue.shade50.withValues(alpha: 0.3),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                             borderSide: BorderSide.none,
@@ -251,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           elevation: 5,
-                          shadowColor: Colors.blue.withOpacity(0.5),
+                          shadowColor: Colors.blue.withValues(alpha: 0.5),
                         ),
                         child: _isLoading
                             ? const SizedBox(
@@ -307,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Username: admin\nPassword: Admin@123',
+                              'Username: demo\nPassword: demo123',
                               style: GoogleFonts.outfit(
                                 color: Colors.grey.shade600,
                                 fontSize: 14,

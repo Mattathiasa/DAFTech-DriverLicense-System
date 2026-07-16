@@ -1,53 +1,40 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'api_service.dart';
+import 'storage_service.dart';
 
 class AuthApiService {
-  final ApiService _apiService = ApiService();
+  static const String _demoUsername = 'demo';
+  static const String _demoPassword = 'demo123';
+  static const String _fakeToken = 'demo-token';
 
-  // Login
+  final StorageService _storage = StorageService();
+
   Future<Map<String, dynamic>> login(String username, String password) async {
-    try {
-      final response = await _apiService.post('/Auth/login', {
-        'username': username,
-        'password': password,
-      }, includeAuth: false);
-
-      if (response['success'] == true && response['data'] != null) {
-        final data = response['data'];
-        final token = data['token'];
-        final loggedInUsername = data['username'] ?? username;
-
-        await _apiService.saveToken(token);
-
-        // Save username to shared preferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_username', loggedInUsername);
-
-        return data;
-      } else {
-        throw Exception(response['message'] ?? 'Login failed');
-      }
-    } catch (e) {
-      throw Exception('Login failed: ${e.toString()}');
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (username == _demoUsername && password == _demoPassword) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', _fakeToken);
+      await prefs.setString('auth_username', _demoUsername);
+      await _storage.setCurrentUser(_demoUsername);
+      return {'token': _fakeToken, 'username': _demoUsername};
     }
+    throw Exception('Login failed: Invalid credentials. Use demo / demo123');
   }
 
-  // Get current username
   Future<String?> getUsername() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_username');
   }
 
-  // Logout
   Future<void> logout() async {
-    await _apiService.clearToken();
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
     await prefs.remove('auth_username');
+    await _storage.logout();
   }
 
-  // Check if user is logged in
   Future<bool> isLoggedIn() async {
-    final token = await _apiService.getToken();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
     return token != null && token.isNotEmpty;
   }
 }

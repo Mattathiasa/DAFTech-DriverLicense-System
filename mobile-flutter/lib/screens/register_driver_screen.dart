@@ -112,6 +112,7 @@ class _RegisterDriverScreenState extends State<RegisterDriverScreen> {
           fullName: _fullNameController.text,
         );
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -133,6 +134,7 @@ class _RegisterDriverScreenState extends State<RegisterDriverScreen> {
             ),
           ),
         );
+        if (!mounted) return;
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -159,6 +161,7 @@ class _RegisterDriverScreenState extends State<RegisterDriverScreen> {
           );
         }
 
+        if (!mounted) return;
         // Show dialog for already registered licenses
         if (isAlreadyRegistered) {
           showDialog(

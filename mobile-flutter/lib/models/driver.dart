@@ -63,13 +63,15 @@ class Driver {
       fullName: json['fullName'] ?? '',
       licenseType: json['licenseType'] ?? '',
       expiryDate: json['expiryDate'] ?? '',
-      qrData: json['qrRawData'],
+      qrData: json['qrRawData'] ?? json['qrData'],
       ocrRawText: json['ocrRawText'],
       status: json['status'] ?? 'active',
       registeredAt: json['createdDate'] != null
           ? DateTime.parse(json['createdDate'])
-          : DateTime.now(),
-      registeredBy: json['registeredByUsername'] ?? 'Unknown',
+          : json['registeredAt'] != null
+              ? DateTime.parse(json['registeredAt'])
+              : DateTime.now(),
+      registeredBy: json['registeredByUsername'] ?? json['registeredBy'] ?? 'Unknown',
     );
   }
 

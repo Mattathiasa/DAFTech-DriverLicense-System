@@ -25,17 +25,17 @@ class _SimpleQRTestScreenState extends State<SimpleQRTestScreen> {
         children: [
           MobileScanner(
             onDetect: (capture) {
-              print('========== DETECTION TRIGGERED ==========');
-              print('Barcodes count: ${capture.barcodes.length}');
+              debugPrint('========== DETECTION TRIGGERED ==========');
+              debugPrint('Barcodes count: ${capture.barcodes.length}');
 
               if (capture.barcodes.isNotEmpty) {
                 final barcode = capture.barcodes.first;
-                print('Barcode type: ${barcode.type}');
-                print('Barcode format: ${barcode.format}');
-                print('Raw value: ${barcode.rawValue}');
-                print('Display value: ${barcode.displayValue}');
-                print('Raw bytes: ${barcode.rawBytes}');
-                print('Raw bytes length: ${barcode.rawBytes?.length ?? 0}');
+                debugPrint('Barcode type: ${barcode.type}');
+                debugPrint('Barcode format: ${barcode.format}');
+                debugPrint('Raw value: ${barcode.rawValue}');
+                debugPrint('Display value: ${barcode.displayValue}');
+                debugPrint('Raw bytes: ${barcode.rawBytes}');
+                debugPrint('Raw bytes length: ${barcode.rawBytes?.length ?? 0}');
 
                 // Try to decode from raw bytes if rawValue is null
                 String? finalValue = barcode.rawValue;
@@ -47,9 +47,9 @@ class _SimpleQRTestScreenState extends State<SimpleQRTestScreen> {
                     barcode.rawBytes!.isNotEmpty) {
                   try {
                     finalValue = String.fromCharCodes(barcode.rawBytes!);
-                    print('Decoded from rawBytes: $finalValue');
+                    debugPrint('Decoded from rawBytes: $finalValue');
                   } catch (e) {
-                    print('Failed to decode rawBytes: $e');
+                    debugPrint('Failed to decode rawBytes: $e');
                   }
                 }
 

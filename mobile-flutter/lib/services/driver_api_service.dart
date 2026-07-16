@@ -1,10 +1,9 @@
 import '../models/driver.dart';
-import 'api_service.dart';
+import 'storage_service.dart';
 
 class DriverApiService {
-  final ApiService _apiService = ApiService();
+  final StorageService _storage = StorageService();
 
-  // Register a new driver
   Future<int> registerDriver({
     required String licenseId,
     required String fullName,
@@ -13,106 +12,63 @@ class DriverApiService {
     required String qrRawData,
     required String ocrRawText,
   }) async {
-    try {
-      final response = await _apiService.post('/Driver/register', {
-        'licenseId': licenseId,
-        'fullName': fullName,
-        'licenseType': licenseType,
-        'expiryDate': expiryDate,
-        'qrRawData': qrRawData,
-        'ocrRawText': ocrRawText,
-      });
-
-      if (response['success'] == true && response['data'] != null) {
-        return response['data']['driverId'];
-      } else {
-        throw Exception(response['message'] ?? 'Registration failed');
-      }
-    } catch (e) {
-      throw Exception('Registration failed: ${e.toString()}');
+    final exists = await _storage.licenseExists(licenseId);
+    if (exists) {
+      final existing = await _storage.getDriverByLicenseId(licenseId);
+      final status = existing?.status.toUpperCase() ?? 'ACTIVE';
+      throw Exception(
+        'Registration failed: License $licenseId is already registered. Status: $status',
+      );
     }
+
+    final status = _deriveStatus(expiryDate);
+    final newDriver = Driver(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      licenseId: licenseId,
+      fullName: fullName,
+      licenseType: licenseType,
+      expiryDate: expiryDate,
+      qrData: qrRawData,
+      ocrRawText: ocrRawText,
+      status: status,
+      registeredAt: DateTime.now(),
+      registeredBy: 'demo',
+    );
+    await _storage.addDriver(newDriver);
+    return int.tryParse(newDriver.id) ?? 0;
   }
 
-  // Get driver by license ID
   Future<Driver?> getDriverByLicenseId(String licenseId) async {
-    try {
-      final response = await _apiService.get('/Driver/$licenseId');
-
-      if (response['success'] == true && response['data'] != null) {
-        return Driver.fromJson(response['data']);
-      } else {
-        return null;
-      }
-    } catch (e) {
-      return null;
-    }
+    return _storage.getDriverByLicenseId(licenseId);
   }
 
-  // Get all drivers
   Future<List<Driver>> getAllDrivers() async {
-    try {
-      print('DEBUG: Calling /Driver endpoint...');
-      final response = await _apiService.get('/Driver');
-
-      print('DEBUG: Response success: ${response['success']}');
-      print('DEBUG: Response data type: ${response['data']?.runtimeType}');
-
-      if (response['success'] == true && response['data'] != null) {
-        final List<dynamic> data = response['data'];
-        print('DEBUG: Number of drivers in response: ${data.length}');
-
-        final drivers = data.map((item) => Driver.fromJson(item)).toList();
-
-        print('DEBUG: Successfully parsed ${drivers.length} drivers');
-        return drivers;
-      } else {
-        print('DEBUG: Response not successful or data is null');
-        return [];
-      }
-    } catch (e) {
-      print('DEBUG: Error in getAllDrivers: $e');
-      return [];
-    }
+    return _storage.getDrivers();
   }
 
-  // Update driver status
   Future<bool> updateDriverStatus(String licenseId, String status) async {
-    try {
-      final response = await _apiService.put('/Driver/status', {
-        'licenseId': licenseId,
-        'status': status,
-      });
-
-      return response['success'] == true;
-    } catch (e) {
-      return false;
-    }
+    final drivers = await _storage.getDrivers();
+    final index = drivers.indexWhere(
+      (d) => d.licenseId.toLowerCase() == licenseId.toLowerCase(),
+    );
+    if (index == -1) return false;
+    drivers[index] = drivers[index].copyWith(status: status);
+    await _storage.saveDrivers(drivers);
+    return true;
   }
 
-  // Get driver statistics directly from backend
   Future<Map<String, dynamic>> getDriverStatistics() async {
-    try {
-      print('DEBUG: Calling /Driver/statistics endpoint...');
-      final response = await _apiService.get('/Driver/statistics');
+    final stats = await _storage.getStatistics();
+    return {
+      'totalDrivers': stats['total'] ?? 0,
+      'activeDrivers': stats['active'] ?? 0,
+      'expiredDrivers': stats['expired'] ?? 0,
+    };
+  }
 
-      print('DEBUG: Statistics response: $response');
-
-      if (response['success'] == true && response['data'] != null) {
-        final data = response['data'];
-        print('DEBUG: Statistics data: $data');
-
-        return {
-          'totalDrivers': data['totalDrivers'] ?? 0,
-          'activeDrivers': data['activeDrivers'] ?? 0,
-          'expiredDrivers': data['expiredDrivers'] ?? 0,
-        };
-      } else {
-        print('DEBUG: Statistics response not successful');
-        return {'totalDrivers': 0, 'activeDrivers': 0, 'expiredDrivers': 0};
-      }
-    } catch (e) {
-      print('DEBUG: Error getting driver statistics: $e');
-      return {'totalDrivers': 0, 'activeDrivers': 0, 'expiredDrivers': 0};
-    }
+  String _deriveStatus(String expiryDate) {
+    final dt = DateTime.tryParse(expiryDate);
+    if (dt != null) return dt.isBefore(DateTime.now()) ? 'expired' : 'active';
+    return Driver.calculateStatus(expiryDate);
   }
 }

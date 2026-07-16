@@ -56,18 +56,18 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
 
   void _onDetect(BarcodeCapture capture) {
     final List<Barcode> barcodes = capture.barcodes;
-    print('========== QR DETECTION ==========');
-    print('Barcodes detected: ${barcodes.length}');
+    debugPrint('========== QR DETECTION ==========');
+    debugPrint('Barcodes detected: ${barcodes.length}');
 
     if (barcodes.isNotEmpty && !_isVerifying) {
       final barcode = barcodes.first;
 
       // Log all available data from the barcode
-      print('Barcode Type: ${barcode.type}');
-      print('Barcode Format: ${barcode.format}');
-      print('Raw Value: ${barcode.rawValue}');
-      print('Display Value: ${barcode.displayValue}');
-      print('Raw Bytes: ${barcode.rawBytes}');
+      debugPrint('Barcode Type: ${barcode.type}');
+      debugPrint('Barcode Format: ${barcode.format}');
+      debugPrint('Raw Value: ${barcode.rawValue}');
+      debugPrint('Display Value: ${barcode.displayValue}');
+      debugPrint('Raw Bytes: ${barcode.rawBytes}');
 
       // Try to get the actual QR data
       String? qrData = barcode.rawValue;
@@ -75,7 +75,7 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
       // If rawValue is null or empty, try displayValue
       if (qrData == null || qrData.isEmpty) {
         qrData = barcode.displayValue;
-        print('Using displayValue instead: $qrData');
+        debugPrint('Using displayValue instead: $qrData');
       }
 
       // If still null, try to decode from raw bytes
@@ -83,16 +83,16 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
         if (barcode.rawBytes != null && barcode.rawBytes!.isNotEmpty) {
           try {
             qrData = String.fromCharCodes(barcode.rawBytes!);
-            print('Decoded from rawBytes: $qrData');
+            debugPrint('Decoded from rawBytes: $qrData');
           } catch (e) {
-            print('Failed to decode rawBytes: $e');
+            debugPrint('Failed to decode rawBytes: $e');
           }
         }
       }
 
-      print('Final QR Data to process: $qrData');
-      print('QR Data length: ${qrData?.length ?? 0}');
-      print('==================================');
+      debugPrint('Final QR Data to process: $qrData');
+      debugPrint('QR Data length: ${qrData?.length ?? 0}');
+      debugPrint('==================================');
 
       if (qrData != null && qrData.isNotEmpty) {
         _verifyFromQR(qrData);
@@ -189,15 +189,15 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
       // Use the provided raw QR data or fallback to the controller text
       final finalQrData = qrRawData ?? _licenseIdController.text;
 
-      print('DEBUG: Verifying license ID: "$licenseId"');
-      print('DEBUG: QR Raw Data: "$finalQrData"');
+      debugPrint('DEBUG: Verifying license ID: "$licenseId"');
+      debugPrint('DEBUG: QR Raw Data: "$finalQrData"');
 
       final result = await _verificationApiService.verifyLicense(
         licenseId: licenseId,
         qrRawData: finalQrData,
       );
 
-      print(
+      debugPrint(
         'DEBUG: Verification result - isReal: ${result.isReal}, isActive: ${result.isActive}',
       );
 

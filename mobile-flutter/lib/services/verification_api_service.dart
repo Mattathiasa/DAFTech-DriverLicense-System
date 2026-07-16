@@ -1,5 +1,5 @@
 import '../models/verification_log.dart';
-import 'api_service.dart';
+import 'storage_service.dart';
 
 class VerificationResult {
   final bool isReal;
@@ -14,137 +14,88 @@ class VerificationResult {
 }
 
 class VerificationApiService {
-  final ApiService _apiService = ApiService();
+  final StorageService _storage = StorageService();
 
-  // Verify license
   Future<VerificationResult> verifyLicense({
     required String licenseId,
     required String qrRawData,
   }) async {
-    try {
-      final response = await _apiService.post('/Verification/verify', {
-        'licenseId': licenseId,
-        'qrRawData': qrRawData,
-      });
+    await Future.delayed(const Duration(milliseconds: 500));
+    final driver = await _storage.getDriverByLicenseId(licenseId);
+    final bool isReal = driver != null;
+    final bool isActive = driver != null && driver.status == 'active';
+    final String message = !isReal
+        ? 'License not found in the registry.'
+        : isActive
+            ? 'License is genuine and active.'
+            : 'License is real but has expired.';
 
-      if (response['success'] == true && response['data'] != null) {
-        final data = response['data'];
-        return VerificationResult(
-          isReal: data['isReal'] ?? false,
-          isActive: data['isActive'] ?? false,
-          message: data['message'] ?? '',
-        );
-      } else {
-        throw Exception(response['message'] ?? 'Verification failed');
-      }
-    } catch (e) {
-      throw Exception('Verification failed: ${e.toString()}');
-    }
+    final log = VerificationLog(
+      id: 'log-${DateTime.now().millisecondsSinceEpoch}',
+      licenseId: licenseId,
+      result: isReal ? (isActive ? 'active' : 'expired') : 'fake',
+      timestamp: DateTime.now(),
+      isReal: isReal,
+      isActive: isActive,
+      checkedByUsername: 'demo',
+    );
+    await _storage.addVerificationLog(log);
+
+    return VerificationResult(isReal: isReal, isActive: isActive, message: message);
   }
 
-  // Get license status
   Future<Map<String, dynamic>> getLicenseStatus(String licenseId) async {
-    try {
-      final response = await _apiService.get('/Verification/status/$licenseId');
-
-      if (response['success'] == true && response['data'] != null) {
-        return response['data'];
-      } else {
-        throw Exception(response['message'] ?? 'Status check failed');
-      }
-    } catch (e) {
-      throw Exception('Status check failed: ${e.toString()}');
-    }
-  }
-
-  // Get verification logs
-  Future<List<VerificationLog>> getVerificationLogs() async {
-    try {
-      final response = await _apiService.get('/Verification/logs');
-
-      if (response['success'] == true && response['data'] != null) {
-        final List<dynamic> data = response['data'];
-        return data.map((item) => VerificationLog.fromJson(item)).toList();
-      } else {
-        return [];
-      }
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // Get dashboard stats
-  Future<Map<String, dynamic>> getDashboardStats() async {
-    try {
-      final response = await _apiService.get('/Verification/dashboard');
-
-      if (response['success'] == true && response['data'] != null) {
-        final data = response['data'] as Map<String, dynamic>;
-
-        // Normalize keys to camelCase in case backend returns PascalCase
-        return {
-          'totalDrivers': data['totalDrivers'] ?? data['TotalDrivers'] ?? 0,
-          'activeDrivers': data['activeDrivers'] ?? data['ActiveDrivers'] ?? 0,
-          'expiredDrivers':
-              data['expiredDrivers'] ?? data['ExpiredDrivers'] ?? 0,
-          'totalVerifications':
-              data['totalVerifications'] ?? data['TotalVerifications'] ?? 0,
-          'realVerifications':
-              data['realVerifications'] ?? data['RealVerifications'] ?? 0,
-          'fakeVerifications':
-              data['fakeVerifications'] ?? data['FakeVerifications'] ?? 0,
-        };
-      }
-      return _emptyStats();
-    } catch (e) {
-      return _emptyStats();
-    }
-  }
-
-  Map<String, dynamic> _emptyStats() {
+    final driver = await _storage.getDriverByLicenseId(licenseId);
+    if (driver == null) throw Exception('Status check failed: License not found');
     return {
-      'totalDrivers': 0,
-      'activeDrivers': 0,
-      'expiredDrivers': 0,
-      'totalVerifications': 0,
-      'realVerifications': 0,
-      'fakeVerifications': 0,
+      'licenseId': driver.licenseId,
+      'status': driver.status,
+      'fullName': driver.fullName,
+      'expiryDate': driver.expiryDate,
     };
   }
 
-  // Export logs to CSV
+  Future<List<VerificationLog>> getVerificationLogs() async {
+    final logs = await _storage.getVerificationLogs();
+    return logs.reversed.toList();
+  }
+
+  Future<Map<String, dynamic>> getDashboardStats() async {
+    final drivers = await _storage.getDrivers();
+    final logs = await _storage.getVerificationLogs();
+    return {
+      'totalDrivers': drivers.length,
+      'activeDrivers': drivers.where((d) => d.status == 'active').length,
+      'expiredDrivers': drivers.where((d) => d.status == 'expired').length,
+      'totalVerifications': logs.length,
+      'realVerifications': logs.where((l) => l.isReal).length,
+      'fakeVerifications': logs.where((l) => !l.isReal).length,
+    };
+  }
+
   Future<String?> exportLogs() async {
-    try {
-      final response = await _apiService.getRaw('/Verification/export');
-      if (response.statusCode == 200) {
-        return response.body;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Delete verification log
-  Future<bool> deleteLog(String logId) async {
-    try {
-      final response = await _apiService.delete('/Verification/logs/$logId');
-      return response['success'] == true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Delete multiple logs
-  Future<bool> deleteLogs(List<String> logIds) async {
-    try {
-      final response = await _apiService.post(
-        '/Verification/logs/delete-batch',
-        {'logIds': logIds},
+    final logs = await _storage.getVerificationLogs();
+    final buffer = StringBuffer();
+    buffer.writeln('Log ID,License ID,Result,Timestamp,Checked By');
+    for (final log in logs) {
+      buffer.writeln(
+        '${log.id},${log.licenseId},${log.result},${log.timestamp.toIso8601String()},${log.checkedByUsername ?? "demo"}',
       );
-      return response['success'] == true;
-    } catch (e) {
-      return false;
     }
+    return buffer.toString();
+  }
+
+  Future<bool> deleteLog(String logId) async {
+    final logs = await _storage.getVerificationLogs();
+    final filtered = logs.where((l) => l.id != logId).toList();
+    await _storage.saveVerificationLogs(filtered);
+    return true;
+  }
+
+  Future<bool> deleteLogs(List<String> logIds) async {
+    final logs = await _storage.getVerificationLogs();
+    final filtered = logs.where((l) => !logIds.contains(l.id)).toList();
+    await _storage.saveVerificationLogs(filtered);
+    return true;
   }
 }

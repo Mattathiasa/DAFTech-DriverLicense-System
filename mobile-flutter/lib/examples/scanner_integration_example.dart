@@ -15,7 +15,6 @@ class ScannerIntegrationExample extends StatefulWidget {
 
 class _ScannerIntegrationExampleState extends State<ScannerIntegrationExample> {
   Map<String, String>? _driverData;
-  String? _scannedImagePath;
 
   /// EXAMPLE 1: Navigate to scanner screen and get results
   Future<void> _openScannerScreen() async {
@@ -26,7 +25,6 @@ class _ScannerIntegrationExampleState extends State<ScannerIntegrationExample> {
 
     if (result != null) {
       setState(() {
-        _scannedImagePath = result['imagePath'] as String?;
         _driverData = result['extractedData'] as Map<String, String>?;
       });
 
@@ -52,7 +50,6 @@ class _ScannerIntegrationExampleState extends State<ScannerIntegrationExample> {
           );
 
           setState(() {
-            _scannedImagePath = imagePath;
             _driverData = extractedData;
           });
 
@@ -66,32 +63,6 @@ class _ScannerIntegrationExampleState extends State<ScannerIntegrationExample> {
     }
   }
 
-  /// EXAMPLE 3: Process existing image with edge detection
-  Future<void> _processExistingImage(String existingImagePath) async {
-    try {
-      // Apply edge detection to existing image
-      final processedPath = await DocumentScannerService.scanFromImage(
-        existingImagePath,
-      );
-
-      if (processedPath != null) {
-        // Run OCR on processed image
-        final extractedData = await OCRService.extractDataFromImage(
-          processedPath,
-        );
-
-        setState(() {
-          _scannedImagePath = processedPath;
-          _driverData = extractedData;
-        });
-
-        _processExtractedData();
-      }
-    } catch (e) {
-      _showError('Processing failed: $e');
-    }
-  }
-
   /// Process the extracted data
   void _processExtractedData() {
     if (_driverData == null) return;
@@ -99,7 +70,6 @@ class _ScannerIntegrationExampleState extends State<ScannerIntegrationExample> {
     // Validate extracted data
     final licenseId = _driverData!['licenseId'] ?? '';
     final fullName = _driverData!['fullName'] ?? '';
-    final dateOfBirth = _driverData!['dateOfBirth'] ?? '';
 
     if (licenseId.isEmpty || fullName.isEmpty) {
       _showError('Could not extract required fields. Please try again.');

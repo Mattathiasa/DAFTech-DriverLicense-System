@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'services/storage_service.dart';
 import 'services/notification_service.dart';
+import 'services/demo_data_store.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -17,6 +18,9 @@ void main() async {
   // Initialize notification service
   await NotificationService().initialize();
   await NotificationService().requestPermissions();
+
+  // Seed demo data on first launch
+  await DemoDataStore().initialize();
 
   runApp(const DriverLicenseApp());
 }
@@ -55,7 +59,12 @@ class DriverLicenseApp extends StatelessWidget {
           filled: true,
         ),
       ),
-      home: const AuthCheck(),
+      home: const Banner(
+        message: 'DEMO',
+        location: BannerLocation.topEnd,
+        color: Colors.deepOrange,
+        child: AuthCheck(),
+      ),
     );
   }
 }

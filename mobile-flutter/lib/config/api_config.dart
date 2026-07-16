@@ -5,11 +5,11 @@ class ApiConfig {
   // - 'physical' for Physical Device via WiFi
   // - 'usb' for Physical Device via USB debugging
   // - 'ngrok' for Public Access via ngrok (works from anywhere!)
-  static const String environment = 'ngrok';
+  static const String environment = 'physical';
 
   // For physical devices via WiFi, update this with your computer's IP address
   // Run: ipconfig (Windows) or ifconfig (Mac/Linux) to find your IP
-  static const String physicalDeviceIP = '10.146.207.17'; // UPDATE THIS!
+  static const String physicalDeviceIP = '192.168.1.5'; // Your PC's local IP
 
   // For ngrok, update this with your ngrok URL (without /api)
   // Get it from the ngrok terminal window after running run-with-ngrok.bat

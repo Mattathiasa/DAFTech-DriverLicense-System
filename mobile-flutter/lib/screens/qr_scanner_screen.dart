@@ -235,11 +235,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     if (isProcessing) return;
 
     final List<Barcode> barcodes = capture.barcodes;
-    print('DEBUG: Barcodes detected: ${barcodes.length}');
+    debugPrint('DEBUG: Barcodes detected: ${barcodes.length}');
 
     if (barcodes.isNotEmpty) {
       final code = barcodes.first.rawValue;
-      print('DEBUG: QR Code value: $code');
+      debugPrint('DEBUG: QR Code value: $code');
 
       if (code != null && code.isNotEmpty) {
         setState(() {
