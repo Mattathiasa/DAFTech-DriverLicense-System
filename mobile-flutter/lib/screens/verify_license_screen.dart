@@ -34,7 +34,7 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
   void initState() {
     super.initState();
     _scannerController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.normal,
+      detectionSpeed: DetectionSpeed.noDuplicates,
       formats: [BarcodeFormat.qrCode],
       autoStart: false,
     );
@@ -631,7 +631,9 @@ class _VerifyLicenseScreenState extends State<VerifyLicenseScreen> {
                 ? null
                 : () {
                     setState(() => _showScanner = true);
-                    _scannerController.start();
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (mounted) _scannerController.start();
+                    });
                   },
             icon: const Icon(Icons.qr_code_scanner_rounded),
             label: Text(

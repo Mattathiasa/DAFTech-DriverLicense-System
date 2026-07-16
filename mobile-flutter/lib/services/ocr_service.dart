@@ -387,6 +387,10 @@ class OCRService {
           'qrRawData': qrData,
         };
       }
+
+      // PRIORITY 3: Treat entire QR content as license ID (plain format e.g. "DL-2024-001")
+      result['licenseId'] = qrData.trim();
+      return result;
     } catch (e) {
       // Return result with raw data if parsing fails
     }
